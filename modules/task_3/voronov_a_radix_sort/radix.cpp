@@ -123,7 +123,7 @@ class SortFunctor {
 };
 
 void parallelSort(int* arr, int size, int threads) {
-    tbb::task_scheduler_init int[threads];
+    tbb::task_scheduler_init init(threads);
     int** arrs = new int*[threads];
     for (int i = 0; i < threads; i++) {
         arrs[i] = new int[size];
