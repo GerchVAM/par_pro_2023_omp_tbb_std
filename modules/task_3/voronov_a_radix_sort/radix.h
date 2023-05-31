@@ -2,15 +2,37 @@
 #ifndef MODULES_TASK_3_VORONOV_A_RADIX_SORT_RADIX_H_
 #define MODULES_TASK_3_VORONOV_A_RADIX_SORT_RADIX_H_
 
-#include <algorithm>
-#include <deque>
-#include <iostream>
-#include <random>
+#include <tbb/task.h>
 #include <vector>
+#include <deque>
 
-void radixSort(int* arr, int size);
-std::vector<int> getRandomVector(int size = -1, int maxEl = -1);
-void printVec(std::vector<int> vec);
-void parallelSort(int* arr, int size, int threads);
+class RootTask : public tbb::task {
+ public:
+    RootTask() {}
+    tbb::task* execute();
+};
+
+class RadixTask : public tbb::task {
+ public:
+    int max_value;
+    const int size;
+    const int* start;
+    std::vector<int>* res;
+    RadixTask(const int* start_, const int size_,  std::vector<int>* res_, int max_value_) :
+      max_value(max_value_), size(size_), start(start_), res(res_) {}
+    tbb::task* execute();
+};
+
+std::vector<int> getRandomVector(int size);
+
+int getMax(std::vector<int> input_vec, int size);
+
+void getMergedVector(const std::vector<int>& a, const std::vector<int>& b, std::vector<int>* res);
+
+std::vector<int> countSort(const std::vector<int>& input_vec, int size, int place);
+
+std::vector<int> radixSort(const std::vector<int>& input_vec, int size);
+
+std::vector<int> radixSortParallel(const std::vector<int>& input_vec, int size);
 
 #endif  // MODULES_TASK_3_VORONOV_A_RADIX_SORT_RADIX_H_

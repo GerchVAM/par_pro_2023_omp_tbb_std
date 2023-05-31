@@ -1,155 +1,134 @@
 // Copyright 2023 Voronov Alexandr
 #include "../../../modules/task_3/voronov_a_radix_sort/radix.h"
+nclude <omp.h>
+#include <tbb/task.h>
+#include <tbb/task_scheduler_init.h>
+#include <vector>
+#include <deque>
+#include <random>
 
-#include <tbb/tbb.h>
-const int base = 256;
-const int shift = 8;
-const int digits = 4;
-const unsigned int masks[digits] = {255u, 255u << 8, 255u << 16, 255u << 24};
 
-void printVec(std::vector<int> vec) {
-    if (vec.empty()) {
-        return;
-    }
-    for (size_t i = 0; i < vec.size(); i++) {
-        std::cout << vec[i] << " ";
-    }
-    std::cout << std::endl;
+tbb::task* RootTask::execute() {
+  return NULL;
 }
 
-unsigned int getDigit(int num, int p) {
-    unsigned int res = num & masks[p];
-    return res >> (shift * p);
+tbb::task* RadixTask::execute() {
+  for (int i = 0; i < size; i++) {
+    res->push_back(start[i]);
+  }
+  for (int place = 1; max_value / place > 0; place *= 10) {
+    *res = countSort(*res, size, place);
+  }
+
+  return NULL;
 }
 
-void radix(int* arr, int size, int p) {
-    std::deque<int> digit[base];
-    for (int i = 0; i < size; i++) {
-        digit[getDigit(arr[i], p)].push_back(arr[i]);
-    }
-
-    // for(int i=0;i<base;i++){
-    //     std::cout<<"#"<<i<<"! ";
-    //     printVec(digit[i]);
-    // }
-    int pos = 0;
-    for (int d = 0; d < base; d++) {
-        while (!digit[d].empty()) {
-            arr[pos] = digit[d].front();
-            digit[d].pop_front();
-            pos++;
-        }
-    }
+std::vector<int> getRandomVector(int size) {
+  std::random_device dev;
+  std::mt19937 gen(dev());
+  std::vector<int> res(size);
+  int sign;
+  for (int i = 0; i < size; i++) {
+    sign = 1 + gen() % 2 * -2;
+    res[i] = gen() % 10000 * sign;
+  }
+  return res;
 }
 
-void radixSort(int* arr, int size) {
-    for (int i = 0; i < digits; i++) {
-        radix(arr, size, i);
-    }
-    int firstNeg = 0;
-    for (int i = 0; i < size; i++) {
-        if (arr[i] < 0) {
-            firstNeg = i;
-            break;
-        }
-    }
-    std::rotate(&arr[0], &arr[firstNeg], &arr[size]);
+int getMax(std::vector<int> input_vec, int size) {
+  int max = abs(input_vec[0]);
+  for (int i = 1; i < size; i++)
+    if (abs(input_vec[i]) > max)
+      max = abs(input_vec[i]);
+  return max;
 }
 
-std::vector<int> getRandomVector(int size, int maxEl) {
-    std::random_device dev;
-    std::mt19937 gen(dev());
-    if (size == -1) {
-        size = 1 + gen() % 20;
+void getMergedVector(const std::vector<int>& a, const std::vector<int>& b, std::vector<int>* res) {
+  int a_size = a.size();
+  int b_size = b.size();
+
+  int i = 0, j = 0;
+  while (i < a_size && j < b_size) {
+    if (a[i] <= b[j]) {
+      res->push_back(a[i]);
+      i++;
+    } else {
+      res->push_back(b[j]);
+      j++;
     }
-    if (maxEl == -1) {
-        maxEl = 1 + gen() % 4000000;
-    }
-    std::vector<int> res;
-    for (int i = 0; i < size; i++) {
-        res.push_back(gen() % maxEl - maxEl / 2);
-    }
-    return res;
+  }
+
+  for (; i < a_size; i++)
+    res->push_back(a[i]);
+  for (; j < b_size; j++)
+    res->push_back(b[j]);
 }
 
-void Merge(int** arrs, int* sizes, int th, int* output) {
-    int* pointers = new int[th];
-    for (int i = 0; i < th; i++) {
-        pointers[i] = 0;
-    }
-    int s = 0;
-    while (true) {
-        int min = INT32_MAX;
-        int mini = -1;
-        for (int id = 0; id < th; id++) {
-            if (pointers[id] == sizes[id]) {
-                continue;
-            }
-            if (min > arrs[id][pointers[id]]) {
-                min = arrs[id][pointers[id]];
-                mini = id;
-            }
-        }
-        if (mini == -1) {
-            delete[] pointers;
-            return;
-        }
-        output[s] = min;
-        // cout<<min<<" "<<mini<<endl;
-        s += 1;
-        pointers[mini]++;
-    }
+std::vector<int> countSort(const std::vector<int>& input_vec, int size, int place) {
+  int dig, sign;
+  std::vector<int> ans(size);
+
+  // digits of 19 since range is -9 to 9
+  std::vector<int> digits(19);
+  for (int i = 0; i < size; i++) {
+    // add digits to the correct index
+    // -9 + 9 -> 0
+    // 9 + 9 -> 18
+    sign = input_vec[i] < 0 ? -1 : 1;
+    dig = (((input_vec[i] * sign) / place) % 10) * sign + 9;
+    digits[dig]++;
+  }
+
+  for (int i = 1; i < 19; i++)
+    digits[i] += digits[i - 1];
+
+  for (int i = size - 1; i >= 0; i--) {
+    sign = input_vec[i] < 0 ? -1 : 1;
+    dig = (((input_vec[i] * sign) / place) % 10) * sign + 9;
+    ans[digits[dig] - 1] = input_vec[i];
+    digits[dig]--;
+  }
+  return ans;
 }
 
-class SortFunctor {
- private:
-    int** arrs;
-    int* arr;
-    int* sizes;
-    int* begins;
+std::vector<int> radixSort(const std::vector<int>& input_vec, int size) {
+  int max_value = getMax(input_vec, size);
+  std::vector<int> res(input_vec);
 
- public:
-    SortFunctor(int** _arrs, int* _arr, int* _sizes, int* _begins)
-        : arrs(_arrs), arr(_arr), sizes(_sizes), begins(_begins) {}
-    void operator()(const tbb::blocked_range<int>& range) const {
-        for (auto id = range.begin(); id != range.end(); id++) {
-            for (int i = begins[id], j = 0; i < begins[id] + sizes[id];
-                 i++, j++) {
-                arrs[id][j] = arr[i];
-            }
-            radixSort(arrs[id], sizes[id]);
-        }
-    }
-};
+  for (int place = 1; max_value / place > 0; place *= 10)
+    res = countSort(res, size, place);
+  return res;
+}
 
-void parallelSort(int* arr, int size, int threads) {
-    tbb::task_scheduler_init; init(threads);
-    int** arrs = new int*[threads];
-    for (int i = 0; i < threads; i++) {
-        arrs[i] = new int[size];
-    }
-    int* sizes = new int[threads];
-    int* begins = new int[threads];
+std::vector<int> radixSortParallel(const std::vector<int>& input_vec, int size) {
+  int proc = omp_get_num_procs();
+  // int proc = 2;
+  int chunk = size / proc;
+  int i = 0;
+  int max_value = getMax(input_vec, size);
+  std::deque<std::vector<int>> res;
+  tbb::task_scheduler_init init(proc);
+  for (int i = 0; i < proc; i++) {
+    res.push_back(std::vector<int>());
+  }
 
-    for (int i = 0; i < threads; i++) {
-        sizes[i] = size / threads;
-    }
-    if (sizes[0] * threads != size) {
-        sizes[0] += size - sizes[0] * threads;
-    }
-    int b = 0;
-    for (int i = 0; i < threads; i++) {
-        begins[i] = b;
-        b += sizes[i];
-    }
+  RootTask& root = *new(tbb::task::allocate_root()) RootTask();
+  root.set_ref_count(proc + 1);
 
-    tbb::parallel_for(tbb::blocked_range<int>(0, threads, 1),
-                      SortFunctor(arrs, arr, sizes, begins));
-    Merge(arrs, sizes, threads, arr);
-    for (int i = 0; i < threads; i++) {
-        delete[] arrs[i];
-    }
-    delete[] arrs;
-    delete[] sizes;
-    delete[] begins;
+  for (; i < proc-1; i++) {
+    RadixTask& task = *new(root.allocate_child()) RadixTask(&input_vec[i * chunk], chunk, &res[i], max_value);
+    tbb::task::spawn(task);
+  }
+  RadixTask& task = *new(root.allocate_child()) RadixTask(&input_vec[i * chunk], size - i * chunk, &res[i], max_value);
+  tbb::task::spawn(task);
+
+  root.wait_for_all();
+
+  for (int i = 0; i < proc - 1; i++) {
+    res.push_back(std::vector<int>());
+    getMergedVector(res[0], res[1], &res.back());
+    res.pop_front();
+    res.pop_front();
+  }
+  return res[0];
 }

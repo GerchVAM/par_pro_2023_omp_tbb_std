@@ -1,46 +1,94 @@
 // Copyright 2023 Voronov Alexandr
 #include <gtest/gtest.h>
-#include <tbb/tbb.h>
+// #include <tbb/tick_count.h>
+#include <vector>
+#include "./radix_sort.h"
 
-#include "./radix.h"
+TEST(TBB, Vector_One_Size) {
+  int size = 1;
+  std::vector<int> input_vec = getRandomVector(size);
 
-TEST(OpenMP_RadixSort, 321) {
-    std::vector<int> p = {3, 2, 1};
-    parallelSort(&p[0], p.size(), 2);
-    ASSERT_EQ(p, std::vector<int>({1, 2, 3}));
+  std::vector<int> exp_res = radixSort(input_vec, size);
+
+  std::vector<int> res = radixSortParallel(input_vec, size);
+
+  ASSERT_EQ(exp_res, res);
 }
 
-TEST(OpenMP_RadixSort, 1) {
-    std::vector<int> a = {1};
-    parallelSort(&a[0], a.size(), 5);
-    ASSERT_EQ(a, std::vector<int>({1}));
-}
-TEST(OpenMP_RadixSort, negative) {
-    std::vector<int> a = {-1, -2, -3};
-    parallelSort(&a[0], a.size(), 4);
-    ASSERT_EQ(a, std::vector<int>({-3, -2, -1}));
-}
-TEST(OpenMP_RadixSort, mixed) {
-    std::vector<int> a = {-1, -2, -3, 3, 1, 2, 0};
-    parallelSort(&a[0], a.size(), 3);
-    ASSERT_EQ(a, std::vector<int>({-3, -2, -1, 0, 1, 2, 3}));
-}
-TEST(OpenMP_RadixSort, random) {
-    std::vector<int> a = getRandomVector(1000000, 1000000000);
-    // printVec(a);
-    std::vector<int> b = a;
-    std::vector<int> p = a;
-    tbb::tick_count start_seq = tbb::tick_count::now();
-    radixSort(&a[0], a.size());
-    tbb::tick_count stop_seq = tbb::tick_count::now();
-    parallelSort(&p[0], p.size(), 4);
-    tbb::tick_count stop_par = tbb::tick_count::now();
+TEST(TBB, Vector_Two_Size) {
+  int size = 2;
+  std::vector<int> input_vec = getRandomVector(size);
 
-    std::sort(std::begin(b), std::end(b));
-    // printVec(a);
-    ASSERT_EQ(a, b);
-    ASSERT_EQ(p, b);
-    double seq = (stop_seq - start_seq).seconds();
-    double par = (stop_par - stop_seq).seconds();
-    std::cout << seq << "  " << par << "  " << seq / par << std::endl;
+  std::vector<int> exp_res = radixSort(input_vec, size);
+
+  std::vector<int> res = radixSortParallel(input_vec, size);
+
+  ASSERT_EQ(exp_res, res);
+}
+
+TEST(TBB, Vector_Odd_Size) {
+  int size = 21;
+  std::vector<int> input_vec = getRandomVector(size);
+
+  std::vector<int> exp_res = radixSort(input_vec, size);
+
+  std::vector<int> res = radixSortParallel(input_vec, size);
+
+  ASSERT_EQ(exp_res, res);
+}
+
+TEST(TBB, Vector_Even_Size) {
+  int size = 20;
+  std::vector<int> input_vec = getRandomVector(size);
+
+  std::vector<int> exp_res = radixSort(input_vec, size);
+
+  std::vector<int> res = radixSortParallel(input_vec, size);
+
+  ASSERT_EQ(exp_res, res);
+}
+
+TEST(TBB, Vector_Odd_Large_Size) {
+  int size = 121;
+  std::vector<int> input_vec = getRandomVector(size);
+
+  std::vector<int> exp_res = radixSort(input_vec, size);
+
+  std::vector<int> res = radixSortParallel(input_vec, size);
+
+  ASSERT_EQ(exp_res, res);
+}
+
+TEST(TBB, Vector_Even_Large_Size) {
+  int size = 120;
+  std::vector<int> input_vec = getRandomVector(size);
+
+  std::vector<int> exp_res = radixSort(input_vec, size);
+
+  std::vector<int> res = radixSortParallel(input_vec, size);
+
+  ASSERT_EQ(exp_res, res);
+}
+
+TEST(TBB, Vector_Mega_Large_Size) {
+  int size = 1000003;
+  // tbb::tick_count t1, t2;
+  // double t1_res, t2_res;
+  std::vector<int> input_vec = getRandomVector(size);
+
+  // t1 = tbb::tick_count::now();
+  std::vector<int> exp_res = radixSort(input_vec, size);
+  // t1_res = (tbb::tick_count::now() - t1).seconds();
+
+  // t2 = tbb::tick_count::now();
+  std::vector<int> res = radixSortParallel(input_vec, size);
+  // t2_res = (tbb::tick_count::now() - t2).seconds();
+
+  ASSERT_EQ(exp_res, res);
+  // EXPECT_EQ(t1_res / t2_res, 0);
+}
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
