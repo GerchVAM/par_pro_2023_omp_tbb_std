@@ -1,6 +1,7 @@
 // Copyright 2023 Voronov Alexandr
-#ifndef MODULES_TASK_3_VORONOV_A_RADIX_SORT_RADIX_SORT_H_
-#define MODULES_TASK_3_VORONOV_A_RADIX_SORT_RADIX_SORT_H_
+#ifndef MODULES_TASK_3_VORONOV_A_RADIX_SORT_RADIX_H_
+#define MODULES_TASK_3_VORONOV_A_RADIX_SORT_RADIX_H_
+
 #include <tbb/task.h>
 #include <vector>
 #include <deque>
@@ -34,4 +35,4 @@ std::vector<int> radixSort(const std::vector<int>& input_vec, int size);
 
 std::vector<int> radixSortParallel(const std::vector<int>& input_vec, int size);
 
-#endif  // MODULES_TASK_3_VORONOV_A_RADIX_SORT_RADIX_SORT_H_
+#endif  // MODULES_TASK_3_VORONOV_A_RADIX_SORT_RADIX_H_

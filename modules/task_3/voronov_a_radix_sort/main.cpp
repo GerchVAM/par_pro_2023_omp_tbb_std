@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 // #include <tbb/tick_count.h>
 #include <vector>
-#include "./radix_sort.h"
+#include "../../../modules/task_3/voronov_a_radix_sort/radix_sort.h"
 
 TEST(TBB, Vector_One_Size) {
   int size = 1;
