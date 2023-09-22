@@ -1,4 +1,4 @@
-// Copyright 2023 Voronov Alexander 
+// Copyright 2023 Voronov Alexander
 
 #include <gtest/gtest.h>
 #include <omp.h>

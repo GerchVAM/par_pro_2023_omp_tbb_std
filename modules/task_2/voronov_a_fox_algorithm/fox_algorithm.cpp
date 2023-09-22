@@ -1,4 +1,4 @@
-// Copyright 2023 Voronov Alexander 
+// Copyright 2023 Voronov Alexander
 
 #include "../../../modules/task_2/voronov_a_fox_algorithm/fox_algorithm.h"
 #include <math.h>
@@ -24,7 +24,8 @@ bool is_equal_matrix(const double* a, const double* b, const int size) {
     return true;
 }
 
-void matrix_mult_seq(const double* a, const double* b, const int size, double* res) {
+void matrix_mult_seq(const double* a, const double* b,
+                     const int size, double* res) {
     double temp;
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
@@ -37,7 +38,8 @@ void matrix_mult_seq(const double* a, const double* b, const int size, double* r
     }
 }
 
-void fox_algorithm_OMP(double *a, double *b, double *res, int n, int count_proc) {
+void fox_algorithm_OMP(double *a, double *b, double *res,
+                        int n, int count_proc) {
     int q = std::sqrt(count_proc);
     #pragma omp parallel num_threads(q * q)
     {
@@ -55,7 +57,8 @@ void fox_algorithm_OMP(double *a, double *b, double *res, int n, int count_proc)
             for (int i = 0; i < n / q; i++) {
                 for (int j = 0; j < n / q; j++) {
                     for (int k = 0; k < n / q; k++) {
-                        res_tmp[i * n + j] += a_temp[i * n + k] * b_temp[k * n + j];
+                        res_tmp[i * n + j] += a_temp[i * n + k] *
+                         b_temp[k * n + j];
                     }
                 }
             }
